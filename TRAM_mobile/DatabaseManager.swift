@@ -103,6 +103,25 @@ class DatabaseManager {
         }
     }
     
+    // Checking if a user already exists so that we do not have multiple entries of the same email or phone number in the database
+    // This is also for security reasons for the user
+    func userAlreadyExists(user: AppUser) -> BooleanLiteralType {
+        var email = user.email;
+        var phoneNumber = user.phoneNumber
+        let queryStatementString = "SELECT COUNT(id) as count from users where email = '" + email + "' or phoneNumber = '" + phoneNumber + "'"
+        var queryStatement: OpaquePointer?
+        var count = 0
+        if sqlite3_prepare(self.db, queryStatementString, -1, &queryStatement, nil) == SQLITE_OK{
+              while(sqlite3_step(queryStatement) == SQLITE_ROW){
+                  count = Int(sqlite3_column_int(queryStatement, 0))
+                   
+              }
+
+        }
+        return (count > 0)
+        
+    }
+    
     func updateUser(_ user: AppUser) {
         let updateStatementString = "UPDATE users SET firstName = ?, lastName = ?, email = ?, phoneNumber = ? WHERE id = ?;"
 
