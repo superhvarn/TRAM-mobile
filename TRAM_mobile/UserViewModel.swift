@@ -7,6 +7,9 @@ class UserViewModel: ObservableObject {
     
     // New user to put updates and additions to
     @Published var newUser = AppUser(id: UUID().uuidString, firstName: "", lastName: "", email: "", phoneNumber: "")
+    
+    @Published var title: String = ""
+    @Published var error: Swift.Error?
 
     init() {
         loadUsers()
@@ -17,7 +20,7 @@ class UserViewModel: ObservableObject {
         self.users = DatabaseManager.shared.fetchUsers()
     }
 
-    func saveUser(_ newUser: AppUser, _ oldUser: AppUser) {
+    func saveUser(_ newUser: AppUser, _ oldUser: AppUser) -> BooleanLiteralType {
         if let index = users.firstIndex(where: { $0.id == oldUser.id }) {
             // Editing a user in the list via id
             var updatedUser = newUser
@@ -29,11 +32,18 @@ class UserViewModel: ObservableObject {
         } else {
             // Adds new user to local memory and database
             var newUserToAdd = newUser
-            newUserToAdd.id = UUID().uuidString // Randomly generating UUID for new user
-            users.append(newUserToAdd)
-            print("Inserting user: \(newUserToAdd)")
-            DatabaseManager.shared.insertUser(user: newUserToAdd)
+            if (DatabaseManager.shared.userAlreadyExists(user: newUser)) {
+                print("User already exists")
+                return false
+            }
+            else {
+                newUserToAdd.id = UUID().uuidString // Randomly generating UUID for new user
+                users.append(newUserToAdd)
+                print("Inserting user: \(newUserToAdd)")
+                DatabaseManager.shared.insertUser(user: newUserToAdd)
+            }
         }
+        return true
     }
     
     func deleteAllUsers() {
@@ -47,7 +57,5 @@ class UserViewModel: ObservableObject {
         users.removeAll { $0.id == user.id }
         DatabaseManager.shared.deleteUser(user)
     }
-
-
 }
 
