@@ -4,8 +4,11 @@ struct UserEditView: View {
     @Binding var user: AppUser
     @Binding var newUser: AppUser
     @State private var tempUser: AppUser
+    @State private var showingAlert = false
+    @State private var sucessAlert = false
     var viewModel: UserViewModel
     @Environment(\.presentationMode) var presentationMode
+
 
     init(user: Binding<AppUser>, newUser: Binding<AppUser>, viewModel: UserViewModel) {
         _user = user
@@ -15,6 +18,7 @@ struct UserEditView: View {
     }
 
     var body: some View {
+        
         GeometryReader { geometry in
             VStack {
                 Form {
@@ -25,15 +29,27 @@ struct UserEditView: View {
                             .font(.headline)
                         TextField("Email", text: $tempUser.email)
                             .font(.headline)
-                        TextField("Phone Number", text: $tempUser.phoneNumber)
+                        TextField("Phone", text: $tempUser.phoneNumber)
                             .font(.headline)
                     }
                     Section {
                         Button("Save Changes") {
-                            viewModel.saveUser(tempUser, user)
-                            presentationMode.wrappedValue.dismiss()
+                            if (viewModel.saveUser(tempUser, user)) == false {
+                                showingAlert = true
+                            }
+                            else {
+                                sucessAlert = true
+                            }
+                
                         }
+                        .alert("User already exists", isPresented: $showingAlert) {
+                                    Button("OK", role: .cancel) { presentationMode.wrappedValue.dismiss()}
+                                }
+                        .alert("User sucessfully created", isPresented: $sucessAlert) {
+                                    Button("OK", role: .cancel) { presentationMode.wrappedValue.dismiss()}
+                                }
                         .buttonStyle(GradientButtonStyle()) // Applying Gradient Button instead of default
+    
                     }
                 }
                 .padding()
